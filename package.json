@@ -1,9 +1,9 @@
 {
-  "name": "ts-orm-template-cli",
+  "name": "ts-cli-template-maker",
   "version": "1.0.1",
   "description": "A CLI to create projects with a TypeScript template.",
   "bin": {
-    "ts-orm-template-cli": "dist/index.js"
+    "ts-cli-template-maker": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
