@@ -1,9 +1,9 @@
 {
-  "name": "ts-cli-template-maker",
+  "name": "ts-project-maker",
   "version": "1.0.2",
   "description": "A CLI to create projects with a TypeScript template.",
   "bin": {
-    "ts-cli-template-maker": "dist/index.js"
+    "ts-project-maker": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "child_process": "^1.0.2",
-    "inquirer": "^8.2.6"
+    "inquirer": "^8.2.6",
+    "url": "^0.11.3"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
