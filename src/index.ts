@@ -19,7 +19,12 @@ type MessageKey =
     | 'errorPackageJson'
     | 'errorOccurred'
     | 'unknownErrorOccurred'
-    | 'invalidGitRepoURL';
+    | 'invalidGitRepoURL'
+    | 'packageName'
+    | 'description'
+    | 'author'
+    | 'license'
+    | 'keywords';
 
 // Interface for the structure of messages in each language
 interface ILanguageMessages {
@@ -36,6 +41,11 @@ interface ILanguageMessages {
     errorOccurred: string;
     unknownErrorOccurred: string;
     invalidGitRepoURL: string;
+    packageName: string;
+    description: string;
+    author: string;
+    license: string;
+    keywords: string;
 }
 
 // Interface for the object containing all messages
@@ -60,6 +70,11 @@ class Messages {
             errorOccurred: 'Failed to create project due to an error: ',
             unknownErrorOccurred: 'An unknown error occurred: ',
             invalidGitRepoURL: 'Please enter a valid GitHub repository URL.',
+            packageName: 'Enter the package name (leave blank for default):',
+            description: 'Enter the project description (leave blank for none):',
+            author: 'Enter the author name (leave blank for none):',
+            license: 'Enter the project license (default: ISC):',
+            keywords: 'Enter keywords separated by commas (leave blank for none):',
         },
         pt: {
             selectLanguage: 'Selecione seu idioma',
@@ -75,24 +90,20 @@ class Messages {
             errorOccurred: 'Falha ao criar o projeto devido a um erro: ',
             unknownErrorOccurred: 'Ocorreu um erro desconhecido: ',
             invalidGitRepoURL: 'Por favor, insira uma URL válida do repositório GitHub.',
+            packageName: 'Digite o nome do pacote (deixe em branco para o padrão):',
+            description: 'Digite a descrição do projeto (deixe em branco para nenhum):',
+            author: 'Digite o nome do autor (deixe em branco para nenhum):',
+            license: 'Digite a licença do projeto (padrão: ISC):',
+            keywords: 'Digite palavras-chave separadas por vírgulas (deixe em branco para nenhuma):',
         }
     };
 
     static currentLanguage: keyof IMessages = 'en';
 
-    /**
-     * Sets the current language for messages.
-     * @param {keyof IMessages} language - The language to set (e.g., 'en' or 'pt').
-     */
     static setLanguage(language: keyof IMessages) {
         this.currentLanguage = language;
     }
 
-    /**
-     * Retrieves a message based on the current language and key.
-     * @param {MessageKey} key - The key of the message to retrieve.
-     * @returns {string} - The localized message.
-     */
     static get(key: MessageKey): string {
         return this.messages[this.currentLanguage][key];
     }
@@ -137,20 +148,10 @@ class ProjectInitializer {
         Messages.setLanguage(language);
     }
 
-    /**
-     * Validates if the given project name contains only letters, numbers, underscores, and dashes.
-     * @param {string} name - The project name to validate.
-     * @returns {boolean|string} - Returns true if valid, otherwise returns an error message.
-     */
     private static isValidProjectName(name: string): boolean | string {
         return /^[a-zA-Z0-9_-]+$/.test(name) || Messages.get('projectName');
     }
 
-    /**
-     * Validates if the given URL is a valid GitHub repository URL.
-     * @param {string} url - The URL to validate.
-     * @returns {boolean|string} - Returns true if valid, otherwise returns an error message.
-     */
     private static isValidGitRepoURL(url: string): boolean | string {
         try {
             const parsedUrl = new URL(url);
@@ -160,11 +161,7 @@ class ProjectInitializer {
         }
     }
 
-    /**
-     * Prompts the user for inputs, including the option to cancel.
-     */
     private static async promptUser() {
-
         await this.promptLanguage();
 
         const answers = await inquirer.prompt([
@@ -206,18 +203,48 @@ class ProjectInitializer {
                     }
                     return input === '' || this.isValidGitRepoURL(input);
                 },
+            },
+            {
+                type: 'input',
+                name: 'packageName',
+                message: Messages.get('packageName'),
+                default: (answers: { repoURL: string }) => {
+                    const repoName = answers.repoURL.split('/').pop()?.replace('.git', '');
+                    return repoName || 'ts-template-api';
+                },
+            },
+            {
+                type: 'input',
+                name: 'description',
+                message: Messages.get('description'),
+                default: '',
+            },
+            {
+                type: 'input',
+                name: 'author',
+                message: Messages.get('author'),
+                default: '',
+            },
+            {
+                type: 'input',
+                name: 'license',
+                message: Messages.get('license'),
+                default: 'ISC',
+            },
+            {
+                type: 'input',
+                name: 'keywords',
+                message: Messages.get('keywords'),
+                default: '',
+                filter: (input: string) => input.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0),
             }
         ]);
 
         return answers;
     }
 
-    /**
-     * Creates a new project by cloning a repository, setting up the project structure,
-     * and optionally setting a new remote origin for the project.
-     */
     public static async createProject(): Promise<void> {
-        const { projectName, repoURL, newRepoURL } = await this.promptUser();
+        const { projectName, repoURL, newRepoURL, packageName, description, author, license, keywords } = await this.promptUser();
 
         try {
             console.log(`${Messages.get('creatingProject')} ./${projectName} 👷‍♀️🚧`);
@@ -226,13 +253,21 @@ class ProjectInitializer {
             const packagePath = `${projectName}/package.json`;
             if (fs.existsSync(packagePath)) {
                 const packageFile = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-                packageFile.name = projectName;
+                packageFile.name = packageName;
+                packageFile.version = '1.0.0';
+                packageFile.description = description;
+                packageFile.author = author;
+                packageFile.license = license;
+                packageFile.keywords = keywords;
+                packageFile.repository.url = newRepoURL || repoURL;
+                packageFile.bugs.url = `${packageFile.repository.url.replace('.git', '')}/issues`;
+                packageFile.homepage = `${packageFile.repository.url.replace('.git', '')}#readme`;
+
                 fs.writeFileSync(packagePath, JSON.stringify(packageFile, null, 2), 'utf8');
 
                 console.log(Messages.get('installingDependencies'));
                 execSync(`cd ${projectName} && npm install`, { stdio: 'inherit' });
 
-                // If the user provided a new repository URL, update the remote origin
                 if (newRepoURL) {
                     console.log(`${Messages.get('settingRemote')} ${newRepoURL} 🔧`);
                     execSync(`cd ${projectName} && git remote set-url origin ${newRepoURL}`, { stdio: 'inherit' });
@@ -252,7 +287,6 @@ class ProjectInitializer {
     }
 }
 
-// Execute the project initialization
 ProjectInitializer.createProject().catch((err) => {
     if (err instanceof Error) {
         console.error(`${Messages.get('errorOccurred')}${err.message}`);
