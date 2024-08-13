@@ -1,6 +1,6 @@
 {
   "name": "ts-project-maker",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A CLI to create projects with a TypeScript template, now supporting multiple languages.",
   "bin": {
     "ts-project-maker": "dist/index.js"
