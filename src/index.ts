@@ -10,6 +10,7 @@ type MessageKey =
     | 'selectLanguage'
     | 'projectName'
     | 'repoURL'
+    | 'branchName'
     | 'newRepoURL'
     | 'operationCanceled'
     | 'creatingProject'
@@ -31,6 +32,7 @@ interface ILanguageMessages {
     selectLanguage: string;
     projectName: string;
     repoURL: string;
+    branchName: string;
     newRepoURL: string;
     operationCanceled: string;
     creatingProject: string;
@@ -60,6 +62,7 @@ class Messages {
             selectLanguage: 'Select your language',
             projectName: 'What is your project name? (c: to cancel)',
             repoURL: 'Which TypeScript template repository you want to use (Repo URL)? (c: to cancel)',
+            branchName: 'Which branch do you want to clone? (leave blank for default branch)',
             newRepoURL: 'Enter the new GitHub repository URL for your project (leave blank to skip, c: to cancel):',
             operationCanceled: 'Operation canceled by the user.',
             creatingProject: 'Creating a new project in .',
@@ -80,6 +83,7 @@ class Messages {
             selectLanguage: 'Selecione seu idioma',
             projectName: 'Qual é o nome do seu projeto? (c: para cancelar)',
             repoURL: 'Qual repositório de template TypeScript você deseja usar (URL do repositório)? (c: para cancelar)',
+            branchName: 'Qual branch você deseja clonar? (deixe em branco para a branch padrão)',
             newRepoURL: 'Insira a nova URL do repositório GitHub para o seu projeto (deixe em branco para pular, c: para cancelar):',
             operationCanceled: 'Operação cancelada pelo usuário.',
             creatingProject: 'Criando um novo projeto em .',
@@ -193,6 +197,12 @@ class ProjectInitializer {
             },
             {
                 type: 'input',
+                name: 'branchName',
+                message: Messages.get('branchName'),
+                default: '',
+            },
+            {
+                type: 'input',
                 name: 'newRepoURL',
                 message: Messages.get('newRepoURL'),
                 validate: (input: string) => {
@@ -244,11 +254,12 @@ class ProjectInitializer {
     }
 
     public static async createProject(): Promise<void> {
-        const { projectName, repoURL, newRepoURL, packageName, description, author, license, keywords } = await this.promptUser();
+        const { projectName, repoURL, branchName, newRepoURL, packageName, description, author, license, keywords } = await this.promptUser();
 
         try {
             console.log(`${Messages.get('creatingProject')} ./${projectName} 👷‍♀️🚧`);
-            execSync(`git clone ${repoURL} ${projectName}`, { stdio: 'inherit' });
+            const branchOption = branchName ? `-b ${branchName}` : '';
+            execSync(`git clone ${branchOption} ${repoURL} ${projectName}`, { stdio: 'inherit' });
 
             const packagePath = `${projectName}/package.json`;
             if (fs.existsSync(packagePath)) {
