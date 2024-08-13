@@ -9,6 +9,7 @@ import { URL } from 'url';
 type MessageKey =
     | 'selectLanguage'
     | 'projectName'
+    | 'repoURLType'
     | 'repoURL'
     | 'branchName'
     | 'newRepoURL'
@@ -31,6 +32,7 @@ type MessageKey =
 interface ILanguageMessages {
     selectLanguage: string;
     projectName: string;
+    repoURLType: string;
     repoURL: string;
     branchName: string;
     newRepoURL: string;
@@ -61,6 +63,7 @@ class Messages {
         en: {
             selectLanguage: 'Select your language',
             projectName: 'What is your project name? (c: to cancel)',
+            repoURLType: 'Which type of URL do you want to use for the repository? (c: to cancel)',
             repoURL: 'Which TypeScript template repository you want to use (Repo URL)? (c: to cancel)',
             branchName: 'Which branch do you want to clone? (leave blank for default branch)',
             newRepoURL: 'Enter the new GitHub repository URL for your project (leave blank to skip, c: to cancel):',
@@ -82,6 +85,7 @@ class Messages {
         pt: {
             selectLanguage: 'Selecione seu idioma',
             projectName: 'Qual é o nome do seu projeto? (c: para cancelar)',
+            repoURLType: 'Qual tipo de URL você deseja usar para o repositório? (c: para cancelar)',
             repoURL: 'Qual repositório de template TypeScript você deseja usar (URL do repositório)? (c: para cancelar)',
             branchName: 'Qual branch você deseja clonar? (deixe em branco para a branch padrão)',
             newRepoURL: 'Insira a nova URL do repositório GitHub para o seu projeto (deixe em branco para pular, c: para cancelar):',
@@ -156,17 +160,35 @@ class ProjectInitializer {
         return /^[a-zA-Z0-9_-]+$/.test(name) || Messages.get('projectName');
     }
 
-    private static isValidGitRepoURL(url: string): boolean | string {
-        try {
-            const parsedUrl = new URL(url);
-            return parsedUrl.origin === 'https://github.com' || Messages.get('invalidGitRepoURL');
-        } catch (error) {
-            return Messages.get('invalidGitRepoURL');
+    private static isValidGitRepoURL(url: string, type: string): boolean | string {
+        if (type === 'https') {
+            try {
+                const parsedUrl = new URL(url);
+                return parsedUrl.origin === 'https://github.com' || Messages.get('invalidGitRepoURL');
+            } catch (error) {
+                return Messages.get('invalidGitRepoURL');
+            }
+        } else if (type === 'ssh') {
+            return /^git@github\.com:[\w.-]+\/[\w.-]+\.git$/.test(url) || Messages.get('invalidGitRepoURL');
         }
+        return Messages.get('invalidGitRepoURL');
     }
 
     private static async promptUser() {
         await this.promptLanguage();
+
+        const { repoURLType } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'repoURLType',
+                message: Messages.get('repoURLType'),
+                choices: [
+                    { name: 'HTTPS', value: 'https' },
+                    { name: 'SSH', value: 'ssh' }
+                ],
+                default: 'https'
+            }
+        ]);
 
         const answers = await inquirer.prompt([
             {
@@ -192,7 +214,7 @@ class ProjectInitializer {
                         console.log(Messages.get('operationCanceled'));
                         process.exit(0);
                     }
-                    return this.isValidGitRepoURL(input);
+                    return this.isValidGitRepoURL(input, repoURLType);
                 },
             },
             {
@@ -211,7 +233,7 @@ class ProjectInitializer {
                         console.log(Messages.get('operationCanceled'));
                         process.exit(0);
                     }
-                    return input === '' || this.isValidGitRepoURL(input);
+                    return input === '' || this.isValidGitRepoURL(input, repoURLType);
                 },
             },
             {
