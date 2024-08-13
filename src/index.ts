@@ -13,10 +13,12 @@ type MessageKey =
     | 'repoURL'
     | 'branchName'
     | 'newRepoURL'
+    | 'mainBranchName'
     | 'operationCanceled'
     | 'creatingProject'
     | 'installingDependencies'
     | 'settingRemote'
+    | 'cleaningUpBranches'
     | 'projectReady'
     | 'errorPackageJson'
     | 'errorOccurred'
@@ -36,10 +38,12 @@ interface ILanguageMessages {
     repoURL: string;
     branchName: string;
     newRepoURL: string;
+    mainBranchName: string;
     operationCanceled: string;
     creatingProject: string;
     installingDependencies: string;
     settingRemote: string;
+    cleaningUpBranches: string;
     projectReady: string;
     errorPackageJson: string;
     errorOccurred: string;
@@ -67,10 +71,12 @@ class Messages {
             repoURL: 'Which TypeScript template repository you want to use (Repo URL)? (c: to cancel)',
             branchName: 'Which branch do you want to clone? (leave blank for default branch)',
             newRepoURL: 'Enter the new GitHub repository URL for your project (leave blank to skip, c: to cancel):',
+            mainBranchName: 'Choose the main branch name (master or main):',
             operationCanceled: 'Operation canceled by the user.',
             creatingProject: 'Creating a new project in .',
             installingDependencies: 'Installing dependencies 💼...',
             settingRemote: 'Setting new remote origin to ',
+            cleaningUpBranches: 'Cleaning up branches...',
             projectReady: 'Project is ready to go! 🚀🚀🚀',
             errorPackageJson: 'Error: package.json not found in the template. Please check the template structure.',
             errorOccurred: 'Failed to create project due to an error: ',
@@ -89,10 +95,12 @@ class Messages {
             repoURL: 'Qual repositório de template TypeScript você deseja usar (URL do repositório)? (c: para cancelar)',
             branchName: 'Qual branch você deseja clonar? (deixe em branco para a branch padrão)',
             newRepoURL: 'Insira a nova URL do repositório GitHub para o seu projeto (deixe em branco para pular, c: para cancelar):',
+            mainBranchName: 'Escolha o nome da branch principal (master ou main):',
             operationCanceled: 'Operação cancelada pelo usuário.',
             creatingProject: 'Criando um novo projeto em .',
             installingDependencies: 'Instalando dependências 💼...',
             settingRemote: 'Configurando novo remote origin para ',
+            cleaningUpBranches: 'Limpando branches...',
             projectReady: 'Projeto está pronto para começar! 🚀🚀🚀',
             errorPackageJson: 'Erro: package.json não encontrado no template. Verifique a estrutura do template.',
             errorOccurred: 'Falha ao criar o projeto devido a um erro: ',
@@ -269,6 +277,16 @@ class ProjectInitializer {
                 message: Messages.get('keywords'),
                 default: '',
                 filter: (input: string) => input.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0),
+            },
+            {
+                type: 'list',
+                name: 'mainBranchName',
+                message: Messages.get('mainBranchName'),
+                choices: [
+                    { name: 'master', value: 'master' },
+                    { name: 'main', value: 'main' }
+                ],
+                default: 'main'
             }
         ]);
 
@@ -276,7 +294,7 @@ class ProjectInitializer {
     }
 
     public static async createProject(): Promise<void> {
-        const { projectName, repoURL, branchName, newRepoURL, packageName, description, author, license, keywords } = await this.promptUser();
+        const { projectName, repoURL, branchName, newRepoURL, packageName, description, author, license, keywords, mainBranchName } = await this.promptUser();
 
         try {
             console.log(`${Messages.get('creatingProject')} ./${projectName} 👷‍♀️🚧`);
@@ -304,6 +322,13 @@ class ProjectInitializer {
                 if (newRepoURL) {
                     console.log(`${Messages.get('settingRemote')} ${newRepoURL} 🔧`);
                     execSync(`cd ${projectName} && git remote set-url origin ${newRepoURL}`, { stdio: 'inherit' });
+                }
+
+                console.log(Messages.get('cleaningUpBranches'));
+                execSync(`cd ${projectName} && git checkout -b ${mainBranchName} && git branch -D ${branchName}`, { stdio: 'inherit' });
+                const branches = execSync(`cd ${projectName} && git branch`).toString().split('\n').map(branch => branch.trim()).filter(branch => branch && branch !== mainBranchName);
+                for (const branch of branches) {
+                    execSync(`cd ${projectName} && git branch -D ${branch}`, { stdio: 'inherit' });
                 }
 
                 console.log(Messages.get('projectReady'));

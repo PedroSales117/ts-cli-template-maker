@@ -1,6 +1,6 @@
 # ts-project-maker
 
-The `ts-project-maker` is a command-line interface tool designed to streamline the creation of TypeScript projects using a pre-defined template. This tool leverages a specific TypeScript ORM template to kickstart your project, handling cloning, branch selection, renaming, and dependency installations with minimal user input.
+The `ts-project-maker` is a command-line interface tool designed to streamline the creation of TypeScript projects using a pre-defined template. This tool leverages a specific TypeScript ORM template to kickstart your project, handling cloning, branch selection, renaming, branch management, and dependency installations with minimal user input.
 
 [![Switch to Portuguese](https://img.shields.io/badge/lang-Portuguese-green.svg)](#portuguese)
 
@@ -10,6 +10,7 @@ The `ts-project-maker` is a command-line interface tool designed to streamline t
 - **Customizable Template Selection**: Use any TypeScript template repository URL to create your project.
 - **Branch Selection**: Optionally choose a specific branch to clone from the template repository.
 - **URL Type Selection**: Choose between HTTPS or SSH for cloning the repository.
+- **Main Branch Setup**: Automatically set up a new `master` or `main` branch, and clean up all other branches from the template repository.
 - **Automatic Dependency Installation**: Automatically installs all npm dependencies after creating the project.
 - **Interactive CLI**: Simple and interactive prompts to collect user input.
 
@@ -42,11 +43,12 @@ You will be prompted to provide the following information:
 4. **Template Repository URL**: Provide the URL of the TypeScript template repository you want to use.
 5. **Branch Name**: Optionally, specify a branch to clone (leave blank to use the default branch).
 6. **New Repository URL**: Optionally, provide a new GitHub repository URL for your project.
-7. **Package Name**: Define the package name for your project (default is derived from the template repository name).
-8. **Description**: Provide a short description for your project.
-9. **Author**: Specify the author's name.
-10. **License**: Choose the license for your project (default is ISC).
-11. **Keywords**: Enter keywords for your project, separated by commas.
+7. **Main Branch Name**: Choose between `master` or `main` as the primary branch for your project.
+8. **Package Name**: Define the package name for your project (default is derived from the template repository name).
+9. **Description**: Provide a short description for your project.
+10. **Author**: Specify the author's name.
+11. **License**: Choose the license for your project (default is ISC).
+12. **Keywords**: Enter keywords for your project, separated by commas.
 
 After answering the prompts, the CLI will:
 - Clone the template repository into a new directory with your project name.
@@ -54,6 +56,7 @@ After answering the prompts, the CLI will:
 - Update the `package.json` with the information you provided.
 - Install all npm dependencies.
 - Set up the GitHub repository if a new URL was provided.
+- Create the primary branch (`master` or `main`) as specified, and delete the reference branch used for cloning along with any other branches from the template.
 
 ## Switching Languages
 
@@ -65,7 +68,7 @@ To switch to the Portuguese version of this README, click the button below:
 
 ## <a name="portuguese"></a>ts-project-maker
 
-O `ts-project-maker` é uma ferramenta de interface de linha de comando projetada para agilizar a criação de projetos TypeScript usando um template pré-definido. Esta ferramenta utiliza um template específico de ORM em TypeScript para iniciar seu projeto, lidando com clonagem, seleção de branch, renomeação e instalações de dependências com mínima interação do usuário.
+O `ts-project-maker` é uma ferramenta de interface de linha de comando projetada para agilizar a criação de projetos TypeScript usando um template pré-definido. Esta ferramenta utiliza um template específico de ORM em TypeScript para iniciar seu projeto, lidando com clonagem, seleção de branch, renomeação, gerenciamento de branches e instalações de dependências com mínima interação do usuário.
 
 [![Switch to English](https://img.shields.io/badge/lang-English-blue.svg)](#english)
 
@@ -75,6 +78,7 @@ O `ts-project-maker` é uma ferramenta de interface de linha de comando projetad
 - **Seleção de Template Personalizável**: Use qualquer URL de repositório de template TypeScript para criar seu projeto.
 - **Seleção de Branch**: Opcionalmente, escolha uma branch específica para clonar do repositório de template.
 - **Seleção do Tipo de URL**: Escolha entre HTTPS ou SSH para clonar o repositório.
+- **Configuração da Branch Principal**: Configure automaticamente uma nova branch `master` ou `main` e limpe todas as outras branches do repositório de template.
 - **Instalação Automática de Dependências**: Instala automaticamente todas as dependências do npm após criar o projeto.
 - **CLI Interativo**: Prompts simples e interativos para coletar as informações do usuário.
 
@@ -107,11 +111,12 @@ Você será solicitado a fornecer as seguintes informações:
 4. **URL do Repositório de Template**: Forneça a URL do repositório de template TypeScript que você deseja usar.
 5. **Nome da Branch**: Opcionalmente, especifique uma branch para clonar (deixe em branco para usar a branch padrão).
 6. **Nova URL do Repositório**: Opcionalmente, forneça uma nova URL do repositório GitHub para o seu projeto.
-7. **Nome do Pacote**: Defina o nome do pacote para o seu projeto (padrão é derivado do nome do repositório de template).
-8. **Descrição**: Forneça uma breve descrição para o seu projeto.
-9. **Autor**: Especifique o nome do autor.
-10. **Licença**: Escolha a licença para o seu projeto (padrão é ISC).
-11. **Palavras-chave**: Insira palavras-chave para o seu projeto, separadas por vírgulas.
+7. **Nome da Branch Principal**: Escolha entre `master` ou `main` como a branch principal do seu projeto.
+8. **Nome do Pacote**: Defina o nome do pacote para o seu projeto (padrão é derivado do nome do repositório de template).
+9. **Descrição**: Forneça uma breve descrição para o seu projeto.
+10. **Autor**: Especifique o nome do autor.
+11. **Licença**: Escolha a licença para o seu projeto (padrão é ISC).
+12. **Palavras-chave**: Insira palavras-chave para o seu projeto, separadas por vírgulas.
 
 Após responder aos prompts, a CLI irá:
 - Clonar o repositório de template em um novo diretório com o nome do seu projeto.
@@ -119,6 +124,7 @@ Após responder aos prompts, a CLI irá:
 - Atualizar o `package.json` com as informações fornecidas.
 - Instalar todas as dependências do npm.
 - Configurar o repositório GitHub, se uma nova URL for fornecida.
+- Criar a branch principal (`master` ou `main`) conforme especificado, e apagar a branch de referência usada na clonagem junto com quaisquer outras branches do template.
 
 ## Trocando de Idioma
 
