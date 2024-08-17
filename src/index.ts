@@ -1,134 +1,52 @@
-#!/usr/bin/env node
-
 import { execSync } from 'child_process';
 import inquirer from 'inquirer';
 import * as fs from 'fs';
 import { URL } from 'url';
+import { IMessages } from './interfaces/IMessages';
+import { messages } from './messages';
 
-// Define the valid keys for messages
-type MessageKey =
-    | 'selectLanguage'
-    | 'projectName'
-    | 'repoURLType'
-    | 'repoURL'
-    | 'branchName'
-    | 'newRepoURL'
-    | 'mainBranchName'
-    | 'operationCanceled'
-    | 'creatingProject'
-    | 'installingDependencies'
-    | 'settingRemote'
-    | 'cleaningUpBranches'
-    | 'projectReady'
-    | 'errorPackageJson'
-    | 'errorOccurred'
-    | 'unknownErrorOccurred'
-    | 'invalidGitRepoURL'
-    | 'packageName'
-    | 'description'
-    | 'author'
-    | 'license'
-    | 'keywords';
-
-// Interface for the structure of messages in each language
-interface ILanguageMessages {
-    selectLanguage: string;
-    projectName: string;
-    repoURLType: string;
-    repoURL: string;
-    branchName: string;
-    newRepoURL: string;
-    mainBranchName: string;
-    operationCanceled: string;
-    creatingProject: string;
-    installingDependencies: string;
-    settingRemote: string;
-    cleaningUpBranches: string;
-    projectReady: string;
-    errorPackageJson: string;
-    errorOccurred: string;
-    unknownErrorOccurred: string;
-    invalidGitRepoURL: string;
-    packageName: string;
-    description: string;
-    author: string;
-    license: string;
-    keywords: string;
-}
-
-// Interface for the object containing all messages
-interface IMessages {
-    en: ILanguageMessages;
-    pt: ILanguageMessages;
-}
-
+/**
+ * The Messages class is responsible for storing and retrieving localized messages.
+ * It contains methods to set the current language and retrieve messages based on a key.
+ */
 class Messages {
-    static messages: IMessages = {
-        en: {
-            selectLanguage: 'Select your language',
-            projectName: 'What is your project name? (c: to cancel)',
-            repoURLType: 'Which type of URL do you want to use for the repository? (c: to cancel)',
-            repoURL: 'Which TypeScript template repository you want to use (Repo URL)? (c: to cancel)',
-            branchName: 'Which branch do you want to clone? (leave blank for default branch)',
-            newRepoURL: 'Enter the new GitHub repository URL for your project (leave blank to skip, c: to cancel):',
-            mainBranchName: 'Choose the main branch name (master or main):',
-            operationCanceled: 'Operation canceled by the user.',
-            creatingProject: 'Creating a new project in .',
-            installingDependencies: 'Installing dependencies 💼...',
-            settingRemote: 'Setting new remote origin to ',
-            cleaningUpBranches: 'Cleaning up branches...',
-            projectReady: 'Project is ready to go! 🚀🚀🚀',
-            errorPackageJson: 'Error: package.json not found in the template. Please check the template structure.',
-            errorOccurred: 'Failed to create project due to an error: ',
-            unknownErrorOccurred: 'An unknown error occurred: ',
-            invalidGitRepoURL: 'Please enter a valid GitHub repository URL.',
-            packageName: 'Enter the package name (leave blank for default):',
-            description: 'Enter the project description (leave blank for none):',
-            author: 'Enter the author name (leave blank for none):',
-            license: 'Enter the project license (default: ISC):',
-            keywords: 'Enter keywords separated by commas (leave blank for none):',
-        },
-        pt: {
-            selectLanguage: 'Selecione seu idioma',
-            projectName: 'Qual é o nome do seu projeto? (c: para cancelar)',
-            repoURLType: 'Qual tipo de URL você deseja usar para o repositório? (c: para cancelar)',
-            repoURL: 'Qual repositório de template TypeScript você deseja usar (URL do repositório)? (c: para cancelar)',
-            branchName: 'Qual branch você deseja clonar? (deixe em branco para a branch padrão)',
-            newRepoURL: 'Insira a nova URL do repositório GitHub para o seu projeto (deixe em branco para pular, c: para cancelar):',
-            mainBranchName: 'Escolha o nome da branch principal (master ou main):',
-            operationCanceled: 'Operação cancelada pelo usuário.',
-            creatingProject: 'Criando um novo projeto em .',
-            installingDependencies: 'Instalando dependências 💼...',
-            settingRemote: 'Configurando novo remote origin para ',
-            cleaningUpBranches: 'Limpando branches...',
-            projectReady: 'Projeto está pronto para começar! 🚀🚀🚀',
-            errorPackageJson: 'Erro: package.json não encontrado no template. Verifique a estrutura do template.',
-            errorOccurred: 'Falha ao criar o projeto devido a um erro: ',
-            unknownErrorOccurred: 'Ocorreu um erro desconhecido: ',
-            invalidGitRepoURL: 'Por favor, insira uma URL válida do repositório GitHub.',
-            packageName: 'Digite o nome do pacote (deixe em branco para o padrão):',
-            description: 'Digite a descrição do projeto (deixe em branco para nenhum):',
-            author: 'Digite o nome do autor (deixe em branco para nenhum):',
-            license: 'Digite a licença do projeto (padrão: ISC):',
-            keywords: 'Digite palavras-chave separadas por vírgulas (deixe em branco para nenhuma):',
-        }
-    };
+    static messages: IMessages = messages;
 
+    /**
+     * The current language being used for messages.
+     * By default, it is set to English ('en').
+     */
     static currentLanguage: keyof IMessages = 'en';
 
+    /**
+     * Sets the language for messages.
+     * @param {keyof IMessages} language - The language code to set ('en' for English, 'pt' for Portuguese).
+     */
     static setLanguage(language: keyof IMessages) {
         this.currentLanguage = language;
     }
 
+    /**
+     * Retrieves a message string based on the provided key.
+     * The message returned will be in the current language set.
+     * @param {MessageKey} key - The key representing the message to retrieve.
+     * @returns {string} The localized message corresponding to the key.
+     */
     static get(key: MessageKey): string {
         return this.messages[this.currentLanguage][key];
     }
 }
 
+/**
+ * The ProjectInitializer class is responsible for initializing a new project.
+ * It handles user prompts, project setup, and Git operations such as cloning and committing changes.
+ */
 class ProjectInitializer {
 
     /**
-     * Prompts the user for the language, and updates the prompt message based on the language selected.
+     * Prompts the user to select a language.
+     * Once a language is selected, all subsequent prompts will be in that language.
+     * The selected language is stored in the Messages class for future reference.
      */
     private static async promptLanguage(): Promise<void> {
         const { language } = await inquirer.prompt([
@@ -164,10 +82,23 @@ class ProjectInitializer {
         Messages.setLanguage(language);
     }
 
+    /**
+     * Validates the project name entered by the user.
+     * The project name must consist only of alphanumeric characters, underscores, and dashes.
+     * @param {string} name - The project name entered by the user.
+     * @returns {boolean | string} Returns true if the project name is valid, otherwise returns an error message.
+     */
     private static isValidProjectName(name: string): boolean | string {
         return /^[a-zA-Z0-9_-]+$/.test(name) || Messages.get('projectName');
     }
 
+    /**
+     * Validates the Git repository URL entered by the user.
+     * The URL must be a valid HTTPS or SSH URL for GitHub repositories.
+     * @param {string} url - The Git repository URL entered by the user.
+     * @param {string} type - The type of URL (either 'https' or 'ssh').
+     * @returns {boolean | string} Returns true if the URL is valid, otherwise returns an error message.
+     */
     private static isValidGitRepoURL(url: string, type: string): boolean | string {
         if (type === 'https') {
             try {
@@ -182,6 +113,12 @@ class ProjectInitializer {
         return Messages.get('invalidGitRepoURL');
     }
 
+    /**
+     * Prompts the user for various inputs required to initialize the project.
+     * This includes the project name, Git repository URL, branch name, and other details.
+     * The user's responses are validated and stored for later use in the project setup.
+     * @returns {Promise<Object>} An object containing the user's responses.
+     */
     private static async promptUser() {
         await this.promptLanguage();
 
@@ -248,9 +185,9 @@ class ProjectInitializer {
                 type: 'input',
                 name: 'packageName',
                 message: Messages.get('packageName'),
-                default: (answers: { repoURL: string }) => {
-                    const repoName = answers.repoURL.split('/').pop()?.replace('.git', '');
-                    return repoName || 'ts-template-api';
+                default: (answers: { projectName: string }) => {
+                    // Automatically set the package name to the project name provided by the user.
+                    return answers.projectName;
                 },
             },
             {
@@ -293,6 +230,11 @@ class ProjectInitializer {
         return answers;
     }
 
+    /**
+     * The main method responsible for creating the project.
+     * It clones the Git repository, updates the `package.json` file with the user's inputs, installs dependencies,
+     * sets the remote URL, cleans up branches, and commits the changes.
+     */
     public static async createProject(): Promise<void> {
         const { projectName, repoURL, branchName, newRepoURL, packageName, description, author, license, keywords, mainBranchName } = await this.promptUser();
 
@@ -323,20 +265,25 @@ class ProjectInitializer {
                     console.log(`${Messages.get('settingRemote')} ${newRepoURL} 🔧`);
                     execSync(`cd ${projectName} && git remote set-url origin ${newRepoURL}`, { stdio: 'inherit' });
                 }
+
                 console.log(Messages.get('cleaningUpBranches'));
-
-                execSync(`cd ${projectName} && git checkout ${mainBranchName}`, { stdio: 'inherit' });
-
+                execSync(`cd ${projectName} && git checkout -b ${mainBranchName} && git branch -D ${branchName}`, { stdio: 'inherit' });
                 const branches = execSync(`cd ${projectName} && git branch --format="%(refname:short)" --merged`)
                     .toString()
                     .split('\n')
                     .map(branch => branch.trim())
                     .filter(branch => branch && branch !== mainBranchName);
-
                 for (const branch of branches) {
                     console.log(`Deleting branch: ${branch}`);
                     execSync(`cd ${projectName} && git branch -D ${branch}`, { stdio: 'inherit' });
                 }
+
+                // Commit the changes to the package.json file with a detailed commit message
+                console.log(`Committing changes to ${mainBranchName} branch`);
+                execSync(
+                    `cd ${projectName} && git add package.json && git commit -m "chore(package): update project details and create main branch\n\nUpdated the \`package.json\` to reflect the new project details, including the project name, description, repository URL, and keywords for the \`${projectName}\`."`,
+                    { stdio: 'inherit' }
+                );
 
                 console.log(Messages.get('projectReady'));
             } else {
@@ -352,10 +299,12 @@ class ProjectInitializer {
     }
 }
 
+// Start the project creation process by invoking the createProject method.
+// If any error occurs during the process, it will be caught and logged to the console.
 ProjectInitializer.createProject().catch((err) => {
     if (err instanceof Error) {
         console.error(`${Messages.get('errorOccurred')}${err.message}`);
     } else {
-        console.error(Messages.get('unknownErrorOccurred'));
+        console.error(`${Messages.get('unknownErrorOccurred')}`);
     }
 });
