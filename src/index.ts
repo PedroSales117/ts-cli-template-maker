@@ -323,11 +323,18 @@ class ProjectInitializer {
                     console.log(`${Messages.get('settingRemote')} ${newRepoURL} 🔧`);
                     execSync(`cd ${projectName} && git remote set-url origin ${newRepoURL}`, { stdio: 'inherit' });
                 }
-
                 console.log(Messages.get('cleaningUpBranches'));
-                execSync(`cd ${projectName} && git checkout -b ${mainBranchName} && git branch -D ${branchName}`, { stdio: 'inherit' });
-                const branches = execSync(`cd ${projectName} && git branch`).toString().split('\n').map(branch => branch.trim()).filter(branch => branch && branch !== mainBranchName);
+
+                execSync(`cd ${projectName} && git checkout ${mainBranchName}`, { stdio: 'inherit' });
+
+                const branches = execSync(`cd ${projectName} && git branch --format="%(refname:short)" --merged`)
+                    .toString()
+                    .split('\n')
+                    .map(branch => branch.trim())
+                    .filter(branch => branch && branch !== mainBranchName);
+
                 for (const branch of branches) {
+                    console.log(`Deleting branch: ${branch}`);
                     execSync(`cd ${projectName} && git branch -D ${branch}`, { stdio: 'inherit' });
                 }
 
