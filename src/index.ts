@@ -267,7 +267,7 @@ class ProjectInitializer {
                 }
 
                 console.log(Messages.get('cleaningUpBranches'));
-                execSync(`cd ${projectName} && git checkout -b ${mainBranchName} && git branch -D ${branchName}`, { stdio: 'inherit' });
+                execSync(`cd ${projectName} && git switch --orphan ${mainBranchName} && git branch -D ${branchName}`, { stdio: 'inherit' });
                 const branches = execSync(`cd ${projectName} && git branch --format="%(refname:short)" --merged`)
                     .toString()
                     .split('\n')
@@ -281,7 +281,7 @@ class ProjectInitializer {
                 // Commit the changes to the package.json file with a detailed commit message
                 console.log(`Committing changes to ${mainBranchName} branch`);
                 execSync(
-                    `cd ${projectName} && git add package.json && git commit -m "chore(package): update project details and create main branch\n\nUpdated the \`package.json\` to reflect the new project details, including the project name, description, repository URL, and keywords for the \`${projectName}\`."`,
+                    `cd ${projectName} && git add . && git commit -m "chore(package): update project details and create main branch\n\nUpdated the \`package.json\` to reflect the new project details, including the project name, description, repository URL, and keywords for the \`${projectName}\`."`,
                     { stdio: 'inherit' }
                 );
 
